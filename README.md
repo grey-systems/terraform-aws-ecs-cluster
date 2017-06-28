@@ -21,7 +21,7 @@ Module usage:
         name                  = "cluster-name"
         instance_keypair_name = "${var.keypair_name}"
 
-        # use of github.com/grey-systems/terraform-multitier-vpc for create an VPC
+        # use github.com/grey-systems/terraform-multitier-vpc to create the VPC and the subnetsOB
         vpc_subnet_ids        = ["${split(",", module.vpc_network.private_subnets_ids)}"]
         instances             = ["${var.ecs_instances}"]
     }
@@ -33,7 +33,6 @@ Inputs
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
 | allowed_subnets |  List of subnets that can access (all traffic) the ecs cluster instances. Intended for VPN/HQ/Devops networks to troubleshoot/testing the cluster directly  | list | `<list>` | no |
-| create_route53zone |  Defines if the creation of a route52 zone for the ecs cluster will be required. This zone can be used for a simple and easy service discovery mechanism  | string | `1` | no |
 | environment |  Environment name. Used to name resources, so that you can use this same module for several environments. All resources will be named as {name}-{environment}  | string | - | yes |
 | instance_keypair_name |  keypair name for the cluster node's instances  | string | - | yes |
 | instances |   * List of instances defined by its type.  * The default value will create 2x t2.small instances + 1x t2.medium instance   | list | `<list>` | no |
