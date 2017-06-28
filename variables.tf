@@ -27,11 +27,7 @@ variable "environment" {
   type = "string"
 }
 
-/* Defines if the creation of a route52 zone for the ecs cluster will be required. This zone can be used for a simple and easy service discovery mechanism */
-variable "create_route53zone" {
-  type    = "string"
-  default = "1"
-}
+
 
 /* List of subnets that can access (all traffic) the ecs cluster instances.
 * Intended for VPN/HQ/Devops networks to troubleshoot/testing the cluster directly
