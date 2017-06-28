@@ -21,7 +21,7 @@ Module usage:
         name                  = "cluster-name"
         instance_keypair_name = "${var.keypair_name}"
 
-        # use of github.com/grey-systems/terraform-multitier-vpc for create an VPC
+        # use github.com/grey-systems/terraform-multitier-vpc to create the VPC and the subnetsOB
         vpc_subnet_ids        = ["${split(",", module.vpc_network.private_subnets_ids)}"]
         instances             = ["${var.ecs_instances}"]
     }
