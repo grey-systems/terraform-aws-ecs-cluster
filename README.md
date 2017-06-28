@@ -1,12 +1,10 @@
 # terraform-ecs-cluster
 
-This repo contains a [Terraform](https://terraform.io/) module for
-provisioning an [AWS Multitier VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Scenario3.html), with the following topology:
+This repo contains a [Terraform](https://terraform.io/) module to create an Amazon ECS Cluster.
 
-* A virtual private cloud (VPC) with a size /16 IPv4 CIDR (example: 10.0.0.0/16). This provides 65,536 private IPv4 addresses.
-* 1-n private subnets (spread between the different AZ).
-* 1-n public subnets (spread between the different AZ).
-* VPN Connection between your VPC and your network. The VPN connection consists of a virtual private gateway located on the Amazon side of the VPN connection and a customer gateway located on your side of the VPN connection.
+* Creates the cluster
+* Creates n-instances and attach them to the cluster
+* Create the required IAM roles, required for ECS Services.
 
 
 Module usage:
@@ -17,21 +15,16 @@ Module usage:
         region     = "us-east-1"
       }
 
-     module "vpc-custom" {
-       source = "github.com/grey-systems/terraform-ecs-cluster.git?ref=master"
+    module "ecs-cluster" {
+        source                = "github.com/grey-systems/terraform-ecs-cluster.git?ref=master"
+        environment           = "${var.environment}"
+        name                  = "cluster-name"
+        instance_keypair_name = "${var.keypair_name}"
 
-       availability_zones = "us-east-1a,us-east-1b"
-       cidr_block = "10.2.0.0/16"
-       public_cidr_blocks = "10.2.0.0/24,10.2.0.1/24"
-       private_cidr_blocks = "10.2.128.0/24,10.0.2.129.0/24"
-       environment = "testing"
-       short_identifier = "test"
-       # It should be your firewall public IP
-       customer_gateway_ip = "92.18.128.4"
-       customer_gateway_name = "my-testing-hq-gateway"
-       subnets_vpn = "192.168.0.0/24"
-     }
-
+        # use of github.com/grey-systems/terraform-multitier-vpc for create an VPC
+        vpc_subnet_ids        = ["${split(",", module.vpc_network.private_subnets_ids)}"]
+        instances             = ["${var.ecs_instances}"]
+    }
 
 
 Inputs
@@ -39,27 +32,23 @@ Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| availability_zones | List of AZ to spare the different subnets  | list | - | yes |
-| cidr_block | VPC Main CIDR block  | string | - | yes |
-| customer_gateway_ip | The IP of the counterpart of the VPN connection.  | string | - | yes |
-| customer_gateway_name | Name for customer gateway  | string | - | yes |
-| environment |  Environment name. Used to name the different resources for an easy identification in AWS console | string | - | yes |
-| private_cidr_blocks | List of private Subnets CIDRs. The module will create a private subnet for every cidr_block  | list | - | yes |
-| public_cidr_blocks |  List of public Subnets CIDRs. The module will create a public subnet for every cidr_block  | list | - | yes |
-| short_identifier | Short environment name. Used to name the different resources for an easy identification in AWS console  | string | - | yes |
-| subnets_vpn | List of cidr blocks to be configured as static routes in the AWS VPN  | string | `` | no |
-
+| allowed_subnets |  List of subnets that can access (all traffic) the ecs cluster instances. Intended for VPN/HQ/Devops networks to troubleshoot/testing the cluster directly  | list | `<list>` | no |
+| create_route53zone |  Defines if the creation of a route52 zone for the ecs cluster will be required. This zone can be used for a simple and easy service discovery mechanism  | string | `1` | no |
+| environment |  Environment name. Used to name resources, so that you can use this same module for several environments. All resources will be named as {name}-{environment}  | string | - | yes |
+| instance_keypair_name |  keypair name for the cluster node's instances  | string | - | yes |
+| instances |   * List of instances defined by its type.  * The default value will create 2x t2.small instances + 1x t2.medium instance   | list | `<list>` | no |
+| name |  Name of the ecs cluster  | string | - | yes |
+| vpc_subnet_ids |  List of vpc subnets to spare the different nodes of the cluster  | list | - | yes |
 
 Outputs
-------------
+----------
+
 | Name | Description |
 |------|-------------|
-| default_vpc_secgroup_id |  id of the default security group of the VPC |
-| nat_public_ips | List of public IPs of the NAT gateways created (1 for every single private subnet). Comma separated list |
-| private_subnets_ids | List of ids for the private subnets |
-| public_subnets_ids | List of ids for the public subnets |
-| vpc_id | VPC Id |
-| vpn_gw_id | VPN Gateway Id  |
+| ecs_service_role_arn |  Arn of the service role created for this cluster, required for ECS services|
+| id | AWS id of the ECS Cluster |
+| name | Name of the cluster, note that this name is the concatenation of the environment + the name given as input |
+
 
 Contributing
 ------------
