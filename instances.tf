@@ -23,7 +23,7 @@ resource "aws_security_group" "ecs-security-group" {
     cidr_blocks = ["${concat(data.aws_vpc.vpc.*.cidr_block,var.allowed_subnets)}"]
   }
 
-  tags {
+  tags = {
     Name = "${aws_ecs_cluster.ecs_cluster.name}_ecs_secgroup"
     Env  = "${var.environment}"
   }
@@ -39,7 +39,7 @@ resource "aws_instance" "ecs-instance" {
   key_name               = "${var.instance_keypair_name}"
   vpc_security_group_ids = ["${aws_security_group.ecs-security-group.id}"]
 
-  tags {
+  tags = {
     Name = "[${aws_ecs_cluster.ecs_cluster.name}] instance-${count.index}"
   }
 
